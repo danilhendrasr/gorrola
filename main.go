@@ -6,28 +6,39 @@ import (
 	"net/url"
 )
 
-var serverUrls = []string{"http://localhost:8080", "http://localhost:8081", "http://localhost:8082"}
+var serverUrls = []string{
+	"http://localhost:8080",
+	"http://localhost:8081",
+	"http://localhost:8082",
+}
+
+type Backend struct {
+	URL          *url.URL
+	Alive        bool
+	ReverseProxy *httputil.ReverseProxy
+}
 
 type BackendPool struct {
-	backends []*httputil.ReverseProxy
+	backends []*Backend
 	current  uint64
 }
 
-var pp = BackendPool{
-	[]*httputil.ReverseProxy{},
+var bp = BackendPool{
+	[]*Backend{},
 	0,
 }
 
 func balanceLoad(w http.ResponseWriter, r *http.Request) {
-	pp.backends[pp.current].ServeHTTP(w, r)
-	pp.current = (pp.current + 1) % uint64(len(pp.backends))
+	bp.backends[bp.current].ReverseProxy.ServeHTTP(w, r)
+	bp.current = (bp.current + 1) % uint64(len(bp.backends))
 }
 
 func main() {
 	for _, serverUrl := range serverUrls {
-		u, _ := url.Parse(string(serverUrl))
+		u, _ := url.Parse(serverUrl)
 		rp := httputil.NewSingleHostReverseProxy(u)
-		pp.backends = append(pp.backends, rp)
+		backend := &Backend{URL: u, ReverseProxy: rp}
+		bp.backends = append(bp.backends, backend)
 	}
 
 	server := http.Server{
