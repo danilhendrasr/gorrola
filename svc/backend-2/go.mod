@@ -1,3 +1,3 @@
-module github.com/danilhendrasr/glancer/svc/backend-2
+module github.com/danilhendrasr/gorrola/svc/backend-2
 
 go 1.19

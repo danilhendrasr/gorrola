@@ -1,3 +1,3 @@
-module github.com/danilhendrasr/glancer
+module github.com/danilhendrasr/gorrola
 
 go 1.19
