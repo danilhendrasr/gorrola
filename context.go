@@ -2,8 +2,10 @@ package main
 
 import "net/http"
 
+type key int
+
 const (
-	Attempts int = iota
+	Attempts key = iota
 	Retry
 )
 

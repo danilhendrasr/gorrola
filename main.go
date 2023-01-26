@@ -43,9 +43,9 @@ type BackendPool struct {
 	current  uint64
 }
 
-func (b *BackendPool) MarkAsDown(serverUrl string) {
+func (b *BackendPool) MarkAsDown(serverUrl *url.URL) {
 	for _, backend := range b.backends {
-		if backend.URL.String() == serverUrl {
+		if backend.URL == serverUrl {
 			backend.mux.Lock()
 			backend.Alive = false
 			backend.mux.Unlock()
@@ -57,7 +57,9 @@ func (b *BackendPool) GetNextAliveBackend() (*Backend, error) {
 	nextIdx := int((backendPool.current + 1) % uint64(len(backendPool.backends)))
 	i := nextIdx
 
-	for i < nextIdx*3 {
+	// Bail out of the loop if alive backend is not found
+	// after 3 iterations.
+	for i < (nextIdx+1)*3 {
 		idx := i % len(b.backends)
 
 		if b.backends[idx].IsAlive() {
@@ -87,7 +89,7 @@ func balanceLoad(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	for idx, serverUrl := range serverUrls {
+	for _, serverUrl := range serverUrls {
 		u, _ := url.Parse(serverUrl)
 
 		rp := httputil.NewSingleHostReverseProxy(u)
@@ -96,15 +98,13 @@ func main() {
 			fmt.Printf("Error: %s\n", err.Error())
 			retries := GetRetryFromContext(r)
 			if retries < 3 {
-				select {
-				case <-time.After(10 * time.Millisecond):
-					ctx := context.WithValue(r.Context(), Retry, retries+1)
-					rp.ServeHTTP(w, r.WithContext(ctx))
-				}
+				time.Sleep(10 * time.Millisecond)
+				ctx := context.WithValue(r.Context(), Retry, retries+1)
+				rp.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
 
-			backendPool.MarkAsDown(serverUrl)
+			backendPool.MarkAsDown(u)
 
 			attempts := GetAttemptsFromContext(r)
 			ctx := context.WithValue(r.Context(), Attempts, attempts+1)
@@ -112,9 +112,6 @@ func main() {
 		}
 
 		newNode := &Backend{URL: u, ReverseProxy: rp, Alive: true}
-		if idx == 2 {
-			newNode.Alive = false
-		}
 		backendPool.backends = append(backendPool.backends, newNode)
 	}
 
