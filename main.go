@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -41,6 +42,19 @@ func (b *Backend) IsAlive() bool {
 type BackendPool struct {
 	backends []*Backend
 	current  uint64
+}
+
+func (b *BackendPool) CheckHealth() {
+	for _, be := range b.backends {
+		conn, err := net.DialTimeout("tcp", be.URL.Host, 1*time.Second)
+
+		if err != nil {
+			be.SetAlive(false)
+		} else {
+			be.SetAlive(true)
+			conn.Close()
+		}
+	}
 }
 
 func (b *BackendPool) MarkAsDown(serverUrl *url.URL) {
@@ -88,6 +102,13 @@ func balanceLoad(w http.ResponseWriter, r *http.Request) {
 	nextBackend.ReverseProxy.ServeHTTP(w, r)
 }
 
+func healthCheck() {
+	for {
+		time.Sleep(time.Second * 20)
+		backendPool.CheckHealth()
+	}
+}
+
 func main() {
 	for _, serverUrl := range serverUrls {
 		u, _ := url.Parse(serverUrl)
@@ -120,5 +141,6 @@ func main() {
 		Handler: http.HandlerFunc(balanceLoad),
 	}
 
+	go healthCheck()
 	server.ListenAndServe()
 }
