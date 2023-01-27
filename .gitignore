@@ -4,3 +4,5 @@ go.work
 
 # Binaries
 gorrola
+
+!*/
