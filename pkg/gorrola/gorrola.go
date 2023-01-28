@@ -13,12 +13,6 @@ import (
 	"time"
 )
 
-var serverUrls = []string{
-	"http://localhost:8080",
-	"http://localhost:8081",
-	"http://localhost:8082",
-}
-
 type Backend struct {
 	URL          *url.URL
 	Alive        bool
@@ -58,9 +52,9 @@ func (b *BackendPool) CheckHealth() {
 	}
 }
 
-func (b *BackendPool) MarkAsDown(serverUrl *url.URL) {
+func (b *BackendPool) MarkAsDown(backendUrl *url.URL) {
 	for _, backend := range b.backends {
-		if backend.URL == serverUrl {
+		if backend.URL == backendUrl {
 			backend.mux.Lock()
 			backend.Alive = false
 			backend.mux.Unlock()
@@ -110,9 +104,9 @@ func healthCheck() {
 	}
 }
 
-func Run() {
-	for _, serverUrl := range serverUrls {
-		u, _ := url.Parse(serverUrl)
+func Run(backendUrls []string, port uint) {
+	for _, backendUrl := range backendUrls {
+		u, _ := url.Parse(backendUrl)
 
 		rp := httputil.NewSingleHostReverseProxy(u)
 
@@ -138,11 +132,11 @@ func Run() {
 	}
 
 	server := http.Server{
-		Addr:    ":3000",
+		Addr:    fmt.Sprintf(":%d", port),
 		Handler: http.HandlerFunc(balanceLoad),
 	}
 
 	go healthCheck()
-	log.Println("Load balancer listening on: ", server.Addr)
+	log.Println("Load balancer served at: ", server.Addr)
 	log.Fatal(server.ListenAndServe())
 }
