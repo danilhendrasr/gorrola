@@ -40,14 +40,15 @@ Not very impressive right, but I'm proud of it. I think this project kickstarts 
 
 <!-- GETTING STARTED -->
 ## Getting Started
-### The fast way
+### The fast way (Linux only)
 1. Download the latest binary from the [release page](https://github.com/danilhendrasr/gorrola/releases)
 2. Run it
    ```bash
+   chmod +x ./gorrola
    ./gorrola run --backends <your backends URLs here, separated by comma>
    ```
 3. Gorrola by defaults will be served at [port 3000](http://localhost:3000)
-  
+
 ### Build from source
 1. Clone the repo
 2. Build the binary
