@@ -10,17 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Go 1.19
+      - name: Setup Go
         uses: actions/setup-go@v3
         with:
           go-version: "^1.19.4"
       - name: Build
         run: go build
       - name: Get current date
-        id: date
-        run: echo "name=date::$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+        id: get-current-date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: "${{ steps.get-current-date.outputs.date }}"
           files: ./gorrola
-          tag_name: ${{ steps.date.outputs.date }}
+
+permissions:
+  contents: write
