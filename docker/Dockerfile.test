@@ -1,0 +1,11 @@
+FROM golang:1.20.2
+
+WORKDIR /app/gorrola
+
+COPY . .
+
+## Add the wait script to the image
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
+RUN chmod +x /wait && go get all && go build
+
+CMD /wait && ./gorrola --backends "http://backend1:8080,http://backend2:8081,http://backend3:8082"

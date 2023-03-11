@@ -1,0 +1,7 @@
+FROM golang:1.20.2
+
+WORKDIR /app/gorrola-backend-1
+
+COPY . .
+
+CMD go run main.go

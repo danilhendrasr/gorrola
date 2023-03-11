@@ -1,0 +1,27 @@
+version: '3.3'
+name: gorrola-e2e-test
+services:
+  api:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.test
+    ports:
+      - "3000:3000"
+    environment:
+      WAIT_HOSTS: backend1:8080, backend2:8081, backend3:8082
+    depends_on:
+      - backend1
+      - backend2
+      - backend3
+  backend1:
+    build:
+      context: ../svc/backend-1
+      dockerfile: Dockerfile.test
+  backend2:
+    build:
+      context: ../svc/backend-2
+      dockerfile: Dockerfile.test
+  backend3:
+    build:
+      context: ../svc/backend-3
+      dockerfile: Dockerfile.test

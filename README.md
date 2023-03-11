@@ -34,7 +34,7 @@ For now, it has basic functionalities such as:
 - Route traffic only to healthy backends
 - CLI-based interface
 
-Not very impressive right, but I'm proud of it. I think this project kickstarts my love for Go ❤️
+Not very impressive right, but I'm proud of it.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
